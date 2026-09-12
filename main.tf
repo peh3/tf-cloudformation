@@ -7,6 +7,11 @@ data "aws_iam_openid_connect_provider" "github" {
   url = "https://token.actions.githubusercontent.com"
 }
 
+# Look up the GitHub repository metadata
+data "github_repository" "repo" {
+  full_name = "peh3/cloud-formation-template"
+}
+
 # 3. IAM Assume Role Trust Policy (Scoped to your repo)
 data "aws_iam_policy_document" "github_oidc_assume_role" {
   statement {
@@ -29,8 +34,15 @@ data "aws_iam_policy_document" "github_oidc_assume_role" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      #values   = ["repo:${var.github_repo}:*"]
-      values   = var.github_repos
+      values   = ["repo:${var.github_repo}:*"]
+      #values   = var.github_repos
+      /*
+      values = [
+        # Automatically extracts owner ID and repo ID from the GitHub provider data source
+        "repo:${data.github_repository.repo.full_name}@${data.github_repository.repo.repo_id}:*",
+        "repo:${data.github_repository.repo.full_name}:*"
+      ]
+      */
     }
   }
 }
